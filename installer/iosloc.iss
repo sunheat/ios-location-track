@@ -1,16 +1,7 @@
-; iOS 虚拟定位轨迹工具 —— Windows 安装包脚本（Inno Setup 6）
-;
-; 构建：
-;   1) .venv\Scripts\python.exe -m PyInstaller --clean --noconfirm Location.spec
-;   2) "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\iosloc.iss
-;
-; 产物：dist\installer\iOSLocationTrack-1.1.0_win-setup.exe
-;
-; 说明：
-; - 安装包**不包含** Apple 的驱动。程序首次启动时会自动检测 Apple Mobile Device
-;   Support，缺失时自动下载安装（因此 exe 以 requireAdministrator 清单启动）。
-; - 安装目录默认 %LOCALAPPDATA%\Programs\iOSLocationTrack，避免 UAC 写 Program Files
-;   带来的虚拟化问题；用户数据在 %LOCALAPPDATA%\iOSLocationTrack（不随卸载删除）。
+; Inno Setup script for the Windows location simulator.
+; The installer does not include Apple Mobile Device Support. The application
+; checks for it at launch and runs as the current user. Install it separately
+; with administrator privileges only when it is missing.
 
 #define MyAppName "iOS 虚拟定位轨迹工具"
 #define MyAppNameEn "iOSLocationTrack"
@@ -78,13 +69,3 @@ Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Fla
 ; 只删安装目录内的临时文件；用户数据（%LOCALAPPDATA%\iOSLocationTrack）保留，
 ; 里面有 config.json 和瓦片缓存，卸载后重装还能用。
 Type: filesandordirs; Name: "{app}\_internal\__pycache__"
-
-[Code]
-// 安装完成后提示用户：首次启动会自动安装 Apple 驱动（可能需要几分钟）
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-  begin
-    // 无需额外动作；提示由 [Run] 段的 postinstall 复选框承担
-  end;
-end;

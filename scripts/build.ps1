@@ -113,7 +113,7 @@ if (-not $SkipTests) {
 }
 
 # ---------- 4. PyInstaller ----------
-Write-Bold "4. 打包 exe（onedir + requireAdministrator 清单）"
+Write-Bold "4. Build executable without elevation"
 if (Test-Path 'dist\iOSLocationTrack') { Remove-Item 'dist\iOSLocationTrack' -Recurse -Force }
 & $VenvPy -m PyInstaller --clean --noconfirm Location.spec
 if ($LASTEXITCODE -ne 0) { Write-Fail "PyInstaller 打包失败"; exit 1 }
@@ -124,20 +124,20 @@ $sizeMb = [math]::Round(((Get-ChildItem 'dist\iOSLocationTrack' -Recurse -File |
     Measure-Object Length -Sum).Sum / 1MB), 1)
 Write-Ok "$exe（整包 $sizeMb MB）"
 
-# ---------- 5. 校验清单里的 requireAdministrator ----------
-Write-Bold "5. 校验 exe 是否请求管理员权限"
-$manifestOk = $false
+# ---------- 5. Reject an elevated executable manifest ----------
+Write-Bold "5. Check executable manifest for unwanted elevation"
 try {
-    # manifest 嵌在 exe 资源里；用 findstr 直接找 UTF-8 明文即可
+    # PyInstaller embeds its manifest in the executable resources.
     $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $exe))
     $text = [System.Text.Encoding]::UTF8.GetString($bytes)
     if ($text -match 'requireAdministrator') {
-        $manifestOk = $true
-        Write-Ok "清单包含 requireAdministrator（启动时会弹 UAC）"
+        Write-Fail "The executable requests administrator privileges"
+        exit 1
     }
-} catch { }
-if (-not $manifestOk) {
-    Write-Warn "未能在 exe 中确认 requireAdministrator —— 请手动确认 Location.spec 的 uac_admin=True"
+    Write-Ok "No requireAdministrator manifest entry found"
+} catch {
+    Write-Fail "Unable to inspect the executable manifest: $_"
+    exit 1
 }
 
 # ---------- 6. Inno Setup ----------
@@ -179,4 +179,4 @@ if (Test-Path 'dist\installer') {
         Write-Host "  安装包：$($_.FullName)"
     }
 }
-Write-Host "`n  提示：exe 启动时会请求管理员权限（用于首次自动安装 Apple Mobile Device Support）。"
+Write-Host "`n  The executable runs as the current user. Install Apple Mobile Device Support separately if needed."

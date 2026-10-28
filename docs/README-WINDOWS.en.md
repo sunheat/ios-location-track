@@ -10,13 +10,14 @@
 
 ## 1. Quick start (3 minutes)
 
-1. Run `iOSLocationTrack-1.1.0_win-setup.exe`, or unzip the portable build and
-   double-click `iOSLocationTrack.exe`.
-2. **The app requests administrator rights** — click *Yes* on the UAC prompt.
-   This is only needed so it can auto-install the Apple driver on first run.
+1. Build this fork with `.\scripts\build.ps1 -NoInstaller`, then run
+   `dist\iOSLocationTrack\iOSLocationTrack.exe`. Upstream release packages still
+   have the old administrator requirement.
+2. The application starts as the current user without a UAC prompt.
 3. An **Environment Check** window appears, listing every required component:
    - Ready items show a green ✓ and their button reads *已就绪* (disabled)
-   - Missing items show a red ✗ with a clickable **Install / Download** button
+    - Missing items show a red ✗. Install Apple Mobile Device Support separately
+      with administrator privileges if it is missing, then click **Recheck**.
    - **The "进入程序" (Enter) button only becomes clickable once every required item is ready**
 4. Click **进入程序** — the UI opens in a Chrome/Edge app window (no address bar).
 5. Connect your iPhone by cable → unlock it → tap *Trust* → click **连接设备** in the UI.
@@ -32,10 +33,9 @@
 | --- | --- | --- | --- |
 | Python runtime | ✅ | version string | — (bundled in the exe) |
 | pymobiledevice3 | ✅ | import + version | — (bundled) |
-| **Apple Mobile Device Support** | ✅ | service state + a protocol round-trip on port 27015 | downloads and installs it (~40–200 MB) |
+| **Apple Mobile Device Support** | ✅ | service state + a protocol round-trip on port 27015 | separate installation if missing |
 | RSD tunnel deps | ✅ | imports `pytun_pmd3` / `pmd_pytcp` etc. | — (bundled) |
 | Developer disk image | ✅ | three files under `resources/ddi/personalized/` | downloads the personalized image (~15 MB) |
-| Administrator rights | ✅ | `IsUserAnAdmin` | right-click → *Run as administrator* |
 | iPhone connection | ➖ optional | usbmuxd `ListDevices` | — (just plug the phone in) |
 | Network reachability | ➖ optional | TCP to `gs.apple.com:443` | — (Apple signs the image online) |
 
@@ -231,15 +231,12 @@ winget install -e --id JRSoftware.InnoSetup     # optional, installer only
    Both `scripts\run.ps1` and `scripts\build.ps1` are stored as UTF-8 with BOM, and
    `build.ps1` re-adds a missing BOM automatically as step 0.5.
 
-### Requesting administrator rights at launch
+### Running without administrator rights
 
-The Windows branch of `Location.spec` sets `uac_admin=True`, which makes PyInstaller write
-`requestedExecutionLevel level="requireAdministrator"` into the exe manifest.
-You can verify it by searching the exe for `requireAdministrator`.
-
-> Note: the userspace tunnel itself does **not** need administrator rights. Elevation exists
-> purely so the first run can auto-install Apple Mobile Device Support without asking the user
-> to right-click and elevate manually.
+The Windows branch of `Location.spec` sets `uac_admin=False`. The built executable
+has `requestedExecutionLevel level="asInvoker"` in its manifest. The userspace
+tunnel runs without elevation. Installing Apple Mobile Device Support remains a
+separate, explicit system operation if the service is missing.
 
 ---
 
@@ -299,7 +296,7 @@ Real-device acceptance, the 6 steps from §7 of `WINDOWS_PORT.md`:
 | `core/server.py` | Injects the runner into TunnelManager; `provider_for()` injects the rsd object; file logging; resources dir split from data dir |
 | `core/location_provider.py` | Platform-aware error messages; **keepalive added** (`_keepalive_loop`) |
 | `main.py` | Environment Check window, background Apple driver check, `--check-driver` / `--install-driver`, cross-platform browser and signals |
-| `Location.spec` | Platform branches; Windows uses `.ico` + `uac_admin=True` + `version_info.txt`; **one spec, no fork** |
+| `Location.spec` | Platform branches; Windows uses `.ico` + `uac_admin=False` + `version_info.txt`; **one spec, no fork** |
 | `tools/make_ico.py` | **New.** Builds a multi-size `.ico` from the existing PNG iconset |
 | `tools/probe_tunnel_win.py` | **New.** Tunnel feasibility diagnostic |
 | `scripts/run.ps1` / `build.ps1` | **New.** Windows run/build scripts |

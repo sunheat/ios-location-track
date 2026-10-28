@@ -116,7 +116,7 @@ def _check_apple_driver() -> tuple[bool, str]:
 
 def _install_apple_driver(log: Callable[[str, str], None]) -> tuple[bool, str]:
     if not plat.is_admin():
-        return False, "需要管理员权限（本程序启动时应已提权）"
+        return False, "Install Apple Mobile Device Support separately as administrator, then recheck."
     result = apple_driver.ensure(log=log, allow_install=True)
     if result.get("ok"):
         if result.get("reboot_required"):
@@ -139,12 +139,6 @@ def _install_developer_image(log: Callable[[str, str], None]) -> tuple[bool, str
     if result.get("ok"):
         return True, result.get("detail") or "下载完成"
     return False, result.get("error") or "下载失败"
-
-
-def _check_permission() -> tuple[bool, str]:
-    if plat.is_admin():
-        return True, "已以管理员身份运行"
-    return False, "未提权（安装 Apple 驱动和管理员操作会失败）"
 
 
 def _check_device() -> tuple[bool, str]:
@@ -201,11 +195,6 @@ def build_items() -> list[EnvItem]:
         "iOS 17 及以上全系共用的个性化镜像素材",
         _check_developer_image, _install_developer_image, required=True,
         install_label="下载", size_hint="约 15 MB",
-    ))
-    items.append(EnvItem(
-        "permission", "管理员权限",
-        "安装驱动与系统级操作需要",
-        _check_permission, None, required=True,
     ))
     items.append(EnvItem(
         "device", "iPhone 连接",

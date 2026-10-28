@@ -1,22 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller 打包配置（macOS / Windows 双平台）。
+"""PyInstaller configuration for macOS and Windows.
 
-用法：
-    macOS  : ./.venv/bin/python -m PyInstaller --clean --noconfirm Location.spec
-    Windows: .venv\\Scripts\\python.exe -m PyInstaller --clean --noconfirm Location.spec
-
-设计要点：
-- **onedir**（不是 onefile）：启动更快，onefile 每次启动都要解包到临时目录，反而更慢。
-- 前端资源（web/）与图标打进包内，运行时通过 sys._MEIPASS 定位。
-- 排除 pymobiledevice3 带进来但本工具用不到的重型依赖（IPython / pytest 等），
-  它们只被 pymobiledevice3 的 CLI 交互模式使用；本工具只用 Python API。
-- **Windows 专属**：`uac_admin=True` —— 在 exe 清单里写入 requireAdministrator，
-  启动时直接弹 UAC 提权。这样首次运行就能自动安装 Apple Mobile Device Support，
-  不需要用户再手动"以管理员身份运行"。
-  （注：userspace 隧道本身**不需要**管理员权限，提权只是为了装驱动。）
-
-注意：Windows 与 macOS 的差异都集中在文件末尾的 `if IS_WINDOWS:` 分支里，
-保持单一 spec，避免两份配置漂移。
+Build with ``python -m PyInstaller --clean --noconfirm Location.spec``.
+The Windows executable runs as the current user. Apple driver installation is
+an explicit separate operation; the user-space tunnel does not need elevation.
+Platform differences remain in the ``if IS_WINDOWS`` branch below.
 """
 import sys
 from pathlib import Path
@@ -158,9 +146,8 @@ if IS_WINDOWS:
         codesign_identity=None,
         entitlements_file=None,
         icon=str(ROOT / "resources" / "AppIcon.ico"),
-        # ★ 启动时直接请求管理员权限（exe 清单 requestedExecutionLevel=requireAdministrator）。
-        #   目的：首次运行即可自动安装 Apple Mobile Device Support，不需要用户手动右键提权。
-        uac_admin=True,
+        # Run as the current user; driver installation is an explicit operation.
+        uac_admin=False,
         version=str(ROOT / "installer" / "version_info.txt")
         if (ROOT / "installer" / "version_info.txt").exists() else None,
     )

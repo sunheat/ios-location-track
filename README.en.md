@@ -8,10 +8,10 @@ Supports **iOS 17 – iOS 27.2** (RSD tunnel + DVT `SimulateLocation`). The deve
 
 The UI is a local web app opened in a Chrome / Edge app window (no address bar — looks like a native app). You can also just open `http://127.0.0.1:8787` in a browser. The map, route engine, playback engine, and device communication all run locally; only map tiles and optional route planning need network access.
 
-> **Windows users: see [docs/README-WINDOWS.md](docs/README-WINDOWS.md).**
-> The Windows build establishes the tunnel **without administrator rights** (pure-Python
-> userspace stack — no Wintun driver needed), detects and auto-installs Apple Mobile Device
-> Support on first launch, and shows an environment self-check window.
+> **Windows users: see [docs/README-WINDOWS.en.md](docs/README-WINDOWS.en.md).**
+> This fork's Windows build runs as the current user. It checks for Apple Mobile
+> Device Support but does not install it during normal startup. Install it
+> separately only if the environment check reports it missing.
 > Build outputs: `dist\iOSLocationTrack\iOSLocationTrack.exe` and
 > `dist\installer\iOSLocationTrack-1.1.0_win-setup.exe`.
 >
@@ -22,18 +22,18 @@ The UI is a local web app opened in a Chrome / Edge app window (no address bar �
 
 ## 1. Quick Start
 
-### Option A — Download the installer (recommended)
+### Option A — Download an upstream release
 
 Grab the build for your platform from [Releases](https://github.com/jbjf6666/ios-location-track/releases):
 
 | Platform | Filename | Notes |
 | --- | --- | --- |
-| **Windows** | `iOSLocationTrack-<version>_win-setup.exe` | Installer. A portable ZIP is also provided — just unzip and run |
+| **Windows** | `iOSLocationTrack-<version>_win-setup.exe` | Upstream build still requests administrator rights; build this fork locally for standard-user startup |
 | **macOS** | `iOSLocationTrack-<version>_mac.dmg` | Open the DMG and drag the app into `Applications` |
 
-On Windows the first launch asks for administrator rights and shows an environment
-self-check window that installs anything missing — see
-[docs/README-WINDOWS.md](docs/README-WINDOWS.md).
+The upstream release packages predate this fork's permission change. Build and
+run this fork's portable executable for the standard-user behavior; see
+[docs/README-WINDOWS.en.md](docs/README-WINDOWS.en.md).
 
 macOS: open the DMG and drag `虚拟定位轨迹.app` into `Applications`. If macOS says
 *"unidentified developer"* on first launch → **right-click → Open → Open**.

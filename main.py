@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-"""iOS 虚拟定位轨迹工具 — 程序入口（macOS / Windows 通用）。
+"""Entry point for the macOS and Windows location simulator.
 
-用法（Windows）：
-    .\\scripts\\run.ps1                    # 正常启动（自动装依赖、自动检查/安装 Apple 驱动）
-    .venv\\Scripts\\python.exe main.py --mock          # 无设备模拟模式
-    .venv\\Scripts\\python.exe main.py --check-driver  # 只检查 Apple Mobile Device Support
-    .venv\\Scripts\\python.exe main.py --install-driver # 强制检查并安装
-
-用法（macOS）：
-    ./scripts/run.sh
-    ./.venv/bin/python main.py --mock
+On Windows, run ``scripts/run.ps1`` for normal use. It checks the Apple device
+service without installing it. Use ``main.py --install-driver`` explicitly if
+system component installation is needed.
 """
 from __future__ import annotations
 
@@ -323,8 +317,7 @@ def main(argv: list[str] | None = None) -> int:
             print("已取消（环境未就绪）。")
             return 0
         if setup_result is None:
-            print("  [提示] 无法显示「环境准备」窗口（tkinter 不可用），"
-                  "改为在后台自动检查并安装依赖。")
+            print("  [info] Setup window unavailable; checking the Apple driver in the background.")
             args.no_driver_check = False
 
     mock = mock_flag
@@ -382,16 +375,12 @@ def main(argv: list[str] | None = None) -> int:
     elif not mock:
         app.log("info", "关键模块自检通过（pymobiledevice3 / RSD 隧道 / DVT 定位）")
 
-    # Windows：Apple Mobile Device Support（usbmuxd）——没有它一台设备都发现不了。
-    # 这是本工具在 Windows 上唯一的系统级依赖，缺失时自动安装。
-    #
-    # 关键：放到**后台线程**里做。首次运行可能要下载 40~200MB，如果同步跑，
-    # 界面会迟迟不出现（打包成窗口程序后用户看不到任何进度）。后台跑的话，
-    # 界面已经打开，安装日志会实时通过 WebSocket 推到界面上。
+    # Check the Apple device service without changing system components.
+    # Keep the probe in a worker so the UI opens without waiting for it.
     driver_state: dict[str, Any] = {"ok": None, "done": threading.Event()}
 
     def _driver_worker() -> None:
-        ok = ensure_apple_driver(app.log, allow_install=True)
+        ok = ensure_apple_driver(app.log, allow_install=False)
         driver_state["ok"] = ok
         try:
             app.devices.refresh()
@@ -434,7 +423,7 @@ def main(argv: list[str] | None = None) -> int:
             app.log("info", f"发现设备：{device.name}（iOS {device.ios_version or '未知'}，{device.udid}）")
     elif not mock:
         if plat.IS_WINDOWS and not args.no_driver_check:
-            app.log("info", "正在检查/安装 Apple Mobile Device Support（usbmuxd），完成后会自动刷新设备列表…")
+            app.log("info", "Checking Apple Mobile Device Support; the device list will refresh when complete.")
         else:
             app.log("warn", "暂未检测到 iOS 设备：请用数据线连接、解锁并在手机上点「信任」")
 
