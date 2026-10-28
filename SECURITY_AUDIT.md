@@ -11,7 +11,7 @@ Initial scope: all 84 tracked files in `sunheat/ios-location-track`, including a
 - A local portable build completed with PyInstaller 6.22.3. Its embedded Windows manifest was extracted from PE resource type 24 and contains `requestedExecutionLevel level="asInvoker"`. The final executable SHA-256 is `8E88984F472C0BE1ABA5131B3FA46D64BD15622BE6939CDAC3ABA24F1EE39D06`. A packaged `--check-driver` run exited successfully.
 - On this machine, the read-only driver check ran without administrator privileges: Apple Mobile Device Support 19.4.0.10 was running, `usbmuxd` answered a protocol probe, and no iPhone was connected. Every required environment-check item passed in the source environment.
 - Microsoft Defender reported completion of an on-demand custom scan of the final `dist/iOSLocationTrack` build on 2026-10-28 (scan ID `55E1059A-88BA-41D4-912B-44D201B24D7C`), with no threat detection returned. This is a malware-signature check, not a proof that the program or its dependencies are harmless.
-- The application itself was not started and no iPhone location was changed. Real-device compatibility and runtime network behavior remain unverified.
+- The normal application UI was not started and no iPhone location was changed. Real-device compatibility and runtime network behavior remain unverified.
 
 ## Findings
 
